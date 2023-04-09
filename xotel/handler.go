@@ -10,6 +10,21 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+const DefaultSeparator = "."
+
+var DefaultEnabledLevels = []slog.Level{slog.LevelError, slog.LevelWarn}
+
+func NewDefaultHandler() *Handler {
+	return NewHandler(DefaultEnabledLevels, DefaultSeparator)
+}
+
+func NewHandler(enabledLevels []slog.Level, separator string) *Handler {
+	return &Handler{
+		enabledLevels: enabledLevels,
+		separator:     separator,
+	}
+}
+
 type Handler struct {
 	enabledLevels []slog.Level
 	attrs         []slog.Attr
@@ -54,17 +69,10 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h *Handler) WithGroup(name string) slog.Handler {
-	if h.group == "" {
-		return &Handler{
-			enabledLevels: h.enabledLevels,
-			attrs:         h.attrs,
-			group:         name,
-		}
-	}
 	return &Handler{
 		enabledLevels: h.enabledLevels,
 		attrs:         h.attrs,
-		group:         h.group + "." + name,
+		group:         h.group + name + h.separator,
 	}
 }
 
@@ -72,22 +80,15 @@ func (h *Handler) convertAttrs(record slog.Record) []attribute.KeyValue {
 	attrs := make([]attribute.KeyValue, 0, record.NumAttrs()+len(h.attrs))
 	record.Attrs(func(attr slog.Attr) {
 		attrs = append(attrs, attribute.KeyValue{
-			Key:   buildKey(h.group, attr.Key),
+			Key:   attribute.Key(h.group + attr.Key),
 			Value: attribute.StringValue(attr.Value.String()),
 		})
 	})
 	for _, attr := range h.attrs {
 		attrs = append(attrs, attribute.KeyValue{
-			Key:   buildKey(h.group, attr.Key),
+			Key:   attribute.Key(h.group + attr.Key),
 			Value: attribute.StringValue(attr.Value.String()),
 		})
 	}
 	return attrs
-}
-
-func buildKey(group, key string) attribute.Key {
-	if group == "" {
-		return attribute.Key(key)
-	}
-	return attribute.Key(group + "." + key)
 }

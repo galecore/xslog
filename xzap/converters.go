@@ -66,6 +66,9 @@ func slogValueToZapField(val slog.Value) (zapcore.FieldType, int64, string, any)
 	}
 
 	switch Kind {
+	case slog.KindLogValuer:
+		Type = zapcore.StringType
+		String = val.Any().(slog.LogValuer).LogValue().String()
 	case slog.KindAny:
 		Interface = val.Any()
 		switch Interface.(type) {
@@ -93,7 +96,7 @@ func slogValueToZapField(val slog.Value) (zapcore.FieldType, int64, string, any)
 	case slog.KindUint64:
 		Type = zapcore.Uint64Type
 		Integer = int64(val.Uint64())
-	case slog.KindGroup, slog.KindLogValuer:
+	case slog.KindGroup:
 		// continue
 	}
 

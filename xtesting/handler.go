@@ -4,19 +4,23 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"testing"
 
 	"github.com/galecore/xslog/util"
 	"golang.org/x/exp/slog"
 )
 
+type Logger interface {
+	Log(args ...any)
+	Logf(format string, args ...any)
+}
+
 type TestingHandler struct {
-	t     *testing.T
+	t     Logger
 	attrs []slog.Attr
 	group string
 }
 
-func NewTestingHandler(t *testing.T) *TestingHandler {
+func NewTestingHandler(t Logger) *TestingHandler {
 	return &TestingHandler{t: t}
 }
 
@@ -30,14 +34,6 @@ func (h *TestingHandler) Handle(_ context.Context, record slog.Record) error {
 }
 
 func (h *TestingHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	if len(attrs) == 0 {
-		return &TestingHandler{
-			t:     h.t,
-			attrs: h.attrs,
-			group: h.group,
-		}
-	}
-
 	return &TestingHandler{
 		t:     h.t,
 		attrs: util.Merge(h.attrs, attrs),
@@ -46,17 +42,10 @@ func (h *TestingHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h *TestingHandler) WithGroup(name string) slog.Handler {
-	if h.group == "" {
-		return &TestingHandler{
-			t:     h.t,
-			attrs: h.attrs,
-			group: name,
-		}
-	}
 	return &TestingHandler{
 		t:     h.t,
 		attrs: h.attrs,
-		group: h.group + "." + name,
+		group: h.group + name + ".",
 	}
 }
 
@@ -70,21 +59,14 @@ func (h *TestingHandler) buildAttrs(record slog.Record) string {
 			builder.WriteString(" ")
 		}
 		counter++
-		builder.WriteString(fmt.Sprintf("%s=%s", buildKey(h.group, attr.Key), attr.Value.String()))
+		builder.WriteString(fmt.Sprintf("%s%s=%s", h.group, attr.Key, attr.Value.String()))
 	})
 	for _, attr := range h.attrs {
 		if counter != 0 {
 			builder.WriteString(" ")
 		}
 		counter++
-		builder.WriteString(fmt.Sprintf("%s=%s", buildKey(h.group, attr.Key), attr.Value.String()))
+		builder.WriteString(fmt.Sprintf("%s%s=%s", h.group, attr.Key, attr.Value.String()))
 	}
 	return builder.String()
-}
-
-func buildKey(group, key string) string {
-	if group == "" {
-		return key
-	}
-	return group + "." + key
 }

@@ -10,29 +10,55 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+//go:generate minimock -i github.com/galecore/xslog/xsentry.SentryClient -o sentry_client_mock_test.go
+type SentryClient interface {
+	CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) string
+}
+
+var DefaultEnabledLevels = []slog.Level{slog.LevelError, slog.LevelWarn}
+
+var slogLevelToSentryLevel = map[slog.Level]sentry.Level{
+	slog.LevelDebug: sentry.LevelDebug,
+	slog.LevelInfo:  sentry.LevelInfo,
+	slog.LevelWarn:  sentry.LevelWarning,
+	slog.LevelError: sentry.LevelError,
+}
+
 type Handler struct {
-	sentry *sentry.Client
+	sentry SentryClient
 
 	enabledLevels []slog.Level
 	attrs         []slog.Attr
 	group         string
 }
 
-func (h *Handler) Enabled(ctx context.Context, level slog.Level) bool {
+func NewDefaultHandler(sentry SentryClient) *Handler {
+	return NewHandler(sentry, DefaultEnabledLevels)
+}
+
+func NewHandler(sentry SentryClient, enabledLevels []slog.Level) *Handler {
+	return &Handler{
+		sentry:        sentry,
+		enabledLevels: enabledLevels,
+	}
+}
+
+func (h *Handler) Enabled(_ context.Context, level slog.Level) bool {
 	return slices.Contains(h.enabledLevels, level)
 }
 
 func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	event := sentry.NewEvent()
-	event.Level = sentry.LevelError
+	event.Timestamp = record.Time
+	event.Level = slogLevelToSentryLevel[record.Level]
 	event.Message = record.Message
-	event.Extra = make(map[string]any, record.NumAttrs()+len(h.attrs))
 
+	event.Extra = make(map[string]any, record.NumAttrs()+len(h.attrs))
 	record.Attrs(func(attr slog.Attr) {
-		event.Extra[attr.Key] = attr.Value.Any()
+		event.Extra[h.group+attr.Key] = attr.Value.Any()
 	})
 	for _, attr := range h.attrs {
-		event.Extra[attr.Key] = attr.Value.Any()
+		event.Extra[h.group+attr.Key] = attr.Value.Any()
 	}
 
 	var (
@@ -77,14 +103,8 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 }
 
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	if len(attrs) == 0 {
-		return &Handler{
-			enabledLevels: h.enabledLevels,
-			attrs:         h.attrs,
-			group:         h.group,
-		}
-	}
 	return &Handler{
+		sentry:        h.sentry,
 		enabledLevels: h.enabledLevels,
 		attrs:         util.Merge(h.attrs, attrs),
 		group:         h.group,
@@ -92,16 +112,10 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h *Handler) WithGroup(name string) slog.Handler {
-	if h.group == "" {
-		return &Handler{
-			enabledLevels: h.enabledLevels,
-			attrs:         h.attrs,
-			group:         name,
-		}
-	}
 	return &Handler{
+		sentry:        h.sentry,
 		enabledLevels: h.enabledLevels,
 		attrs:         h.attrs,
-		group:         h.group + "." + name,
+		group:         h.group + name + ".",
 	}
 }

@@ -22,14 +22,16 @@ type Handler struct {
 	addCaller bool
 }
 
-func NewFromCore(core zapcore.Core) *Handler {
+func NewHandlerFromCore(core zapcore.Core, separator string, addCaller bool) *Handler {
 	return &Handler{
-		core: core,
+		core:      core,
+		separator: separator,
+		addCaller: addCaller,
 	}
 }
 
-func New(logger interface{ Core() zapcore.Core }) *Handler {
-	return NewFromCore(logger.Core())
+func NewHandler(logger interface{ Core() zapcore.Core }, separator string, addCaller bool) *Handler {
+	return NewHandlerFromCore(logger.Core(), separator, addCaller)
 }
 
 func (h *Handler) Enabled(_ context.Context, l slog.Level) bool {
@@ -64,10 +66,12 @@ func (h *Handler) Handle(_ context.Context, rec slog.Record) error {
 	if checked == nil {
 		return nil
 	}
-	rec.Attrs(func(attr slog.Attr) {
-		checked.Write(slogAttrToZapField(attr.Key, attr.Value))
-	})
 
+	var checkedFields []zapcore.Field
+	rec.Attrs(func(attr slog.Attr) {
+		checkedFields = append(checkedFields, slogAttrToZapField(attr.Key, attr.Value))
+	})
+	checked.Write(checkedFields...)
 	return nil
 }
 

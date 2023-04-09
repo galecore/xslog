@@ -13,7 +13,7 @@ func TestHandler_Enabled(t *testing.T) {
 	mc := minimock.NewController(t)
 	t.Cleanup(mc.Finish)
 	sentryClient := NewSentryClientMock(mc)
-	h := NewHandler(sentryClient, DefaultEnabledLevels)
+	h := NewHandler(sentryClient, DefaultEnabledLevels, DefaultSeparator)
 
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo} {
 		assert.False(t, h.Enabled(nil, level))
@@ -28,12 +28,12 @@ func TestHandler_Handle(t *testing.T) {
 		mc := minimock.NewController(t)
 		t.Cleanup(mc.Finish)
 		sentryClient := NewSentryClientMock(mc)
-		h := NewHandler(sentryClient, DefaultEnabledLevels)
+		h := NewHandler(sentryClient, DefaultEnabledLevels, DefaultSeparator)
 
-		sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) {
+		sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) {
 			assert.Equal(t, "test", event.Message)
 			assert.True(t, event.Level == sentry.LevelWarning || event.Level == sentry.LevelError)
-		}).Return("")
+		}).Return(nil)
 
 		for _, level := range DefaultEnabledLevels {
 			assert.NoError(t, h.Handle(nil, slog.Record{
@@ -48,13 +48,13 @@ func TestHandler_Handle(t *testing.T) {
 		mc := minimock.NewController(t)
 		t.Cleanup(mc.Finish)
 		sentryClient := NewSentryClientMock(mc)
-		h := NewHandler(sentryClient, DefaultEnabledLevels)
+		h := NewHandler(sentryClient, DefaultEnabledLevels, DefaultSeparator)
 
-		sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) {
+		sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) {
 			assert.Equal(t, "test", event.Message)
 			assert.True(t, event.Level == sentry.LevelWarning || event.Level == sentry.LevelError)
 			assert.Equal(t, map[string]any{"key": "value", "int": int64(1)}, event.Extra)
-		}).Return("")
+		}).Return(nil)
 
 		for _, level := range DefaultEnabledLevels {
 			record := slog.Record{
@@ -71,13 +71,13 @@ func TestHandler_WithAttrs(t *testing.T) {
 	mc := minimock.NewController(t)
 	t.Cleanup(mc.Finish)
 	sentryClient := NewSentryClientMock(mc)
-	h := NewHandler(sentryClient, DefaultEnabledLevels)
+	h := NewHandler(sentryClient, DefaultEnabledLevels, DefaultSeparator)
 
-	sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) {
+	sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) {
 		assert.Equal(t, "test", event.Message)
 		assert.True(t, event.Level == sentry.LevelWarning || event.Level == sentry.LevelError)
 		assert.Equal(t, map[string]any{"key": "value", "int": int64(1)}, event.Extra)
-	}).Return("")
+	}).Return(nil)
 
 	for _, level := range DefaultEnabledLevels {
 		record := slog.Record{
@@ -93,13 +93,13 @@ func TestHandler_WithGroup(t *testing.T) {
 	mc := minimock.NewController(t)
 	t.Cleanup(mc.Finish)
 	sentryClient := NewSentryClientMock(mc)
-	h := NewHandler(sentryClient, DefaultEnabledLevels)
+	h := NewHandler(sentryClient, DefaultEnabledLevels, DefaultSeparator)
 
-	sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) {
+	sentryClient.CaptureEventMock.Inspect(func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) {
 		assert.Equal(t, "test", event.Message)
 		assert.True(t, event.Level == sentry.LevelWarning || event.Level == sentry.LevelError)
 		assert.Equal(t, map[string]any{"group.key": "value", "group.int": int64(1)}, event.Extra)
-	}).Return("")
+	}).Return(nil)
 
 	for _, level := range DefaultEnabledLevels {
 		record := slog.Record{

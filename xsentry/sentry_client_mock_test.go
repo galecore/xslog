@@ -17,8 +17,8 @@ import (
 type SentryClientMock struct {
 	t minimock.Tester
 
-	funcCaptureEvent          func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) (s1 string)
-	inspectFuncCaptureEvent   func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope)
+	funcCaptureEvent          func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) (ep1 *sentry.EventID)
+	inspectFuncCaptureEvent   func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier)
 	afterCaptureEventCounter  uint64
 	beforeCaptureEventCounter uint64
 	CaptureEventMock          mSentryClientMockCaptureEvent
@@ -58,16 +58,16 @@ type SentryClientMockCaptureEventExpectation struct {
 type SentryClientMockCaptureEventParams struct {
 	event *sentry.Event
 	hint  *sentry.EventHint
-	scope *sentry.Scope
+	scope sentry.EventModifier
 }
 
 // SentryClientMockCaptureEventResults contains results of the SentryClient.CaptureEvent
 type SentryClientMockCaptureEventResults struct {
-	s1 string
+	ep1 *sentry.EventID
 }
 
 // Expect sets up expected params for SentryClient.CaptureEvent
-func (mmCaptureEvent *mSentryClientMockCaptureEvent) Expect(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) *mSentryClientMockCaptureEvent {
+func (mmCaptureEvent *mSentryClientMockCaptureEvent) Expect(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) *mSentryClientMockCaptureEvent {
 	if mmCaptureEvent.mock.funcCaptureEvent != nil {
 		mmCaptureEvent.mock.t.Fatalf("SentryClientMock.CaptureEvent mock is already set by Set")
 	}
@@ -87,7 +87,7 @@ func (mmCaptureEvent *mSentryClientMockCaptureEvent) Expect(event *sentry.Event,
 }
 
 // Inspect accepts an inspector function that has same arguments as the SentryClient.CaptureEvent
-func (mmCaptureEvent *mSentryClientMockCaptureEvent) Inspect(f func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope)) *mSentryClientMockCaptureEvent {
+func (mmCaptureEvent *mSentryClientMockCaptureEvent) Inspect(f func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier)) *mSentryClientMockCaptureEvent {
 	if mmCaptureEvent.mock.inspectFuncCaptureEvent != nil {
 		mmCaptureEvent.mock.t.Fatalf("Inspect function is already set for SentryClientMock.CaptureEvent")
 	}
@@ -98,7 +98,7 @@ func (mmCaptureEvent *mSentryClientMockCaptureEvent) Inspect(f func(event *sentr
 }
 
 // Return sets up results that will be returned by SentryClient.CaptureEvent
-func (mmCaptureEvent *mSentryClientMockCaptureEvent) Return(s1 string) *SentryClientMock {
+func (mmCaptureEvent *mSentryClientMockCaptureEvent) Return(ep1 *sentry.EventID) *SentryClientMock {
 	if mmCaptureEvent.mock.funcCaptureEvent != nil {
 		mmCaptureEvent.mock.t.Fatalf("SentryClientMock.CaptureEvent mock is already set by Set")
 	}
@@ -106,12 +106,12 @@ func (mmCaptureEvent *mSentryClientMockCaptureEvent) Return(s1 string) *SentryCl
 	if mmCaptureEvent.defaultExpectation == nil {
 		mmCaptureEvent.defaultExpectation = &SentryClientMockCaptureEventExpectation{mock: mmCaptureEvent.mock}
 	}
-	mmCaptureEvent.defaultExpectation.results = &SentryClientMockCaptureEventResults{s1}
+	mmCaptureEvent.defaultExpectation.results = &SentryClientMockCaptureEventResults{ep1}
 	return mmCaptureEvent.mock
 }
 
 // Set uses given function f to mock the SentryClient.CaptureEvent method
-func (mmCaptureEvent *mSentryClientMockCaptureEvent) Set(f func(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) (s1 string)) *SentryClientMock {
+func (mmCaptureEvent *mSentryClientMockCaptureEvent) Set(f func(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) (ep1 *sentry.EventID)) *SentryClientMock {
 	if mmCaptureEvent.defaultExpectation != nil {
 		mmCaptureEvent.mock.t.Fatalf("Default expectation is already set for the SentryClient.CaptureEvent method")
 	}
@@ -126,7 +126,7 @@ func (mmCaptureEvent *mSentryClientMockCaptureEvent) Set(f func(event *sentry.Ev
 
 // When sets expectation for the SentryClient.CaptureEvent which will trigger the result defined by the following
 // Then helper
-func (mmCaptureEvent *mSentryClientMockCaptureEvent) When(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) *SentryClientMockCaptureEventExpectation {
+func (mmCaptureEvent *mSentryClientMockCaptureEvent) When(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) *SentryClientMockCaptureEventExpectation {
 	if mmCaptureEvent.mock.funcCaptureEvent != nil {
 		mmCaptureEvent.mock.t.Fatalf("SentryClientMock.CaptureEvent mock is already set by Set")
 	}
@@ -140,13 +140,13 @@ func (mmCaptureEvent *mSentryClientMockCaptureEvent) When(event *sentry.Event, h
 }
 
 // Then sets up SentryClient.CaptureEvent return parameters for the expectation previously defined by the When method
-func (e *SentryClientMockCaptureEventExpectation) Then(s1 string) *SentryClientMock {
-	e.results = &SentryClientMockCaptureEventResults{s1}
+func (e *SentryClientMockCaptureEventExpectation) Then(ep1 *sentry.EventID) *SentryClientMock {
+	e.results = &SentryClientMockCaptureEventResults{ep1}
 	return e.mock
 }
 
 // CaptureEvent implements SentryClient
-func (mmCaptureEvent *SentryClientMock) CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) (s1 string) {
+func (mmCaptureEvent *SentryClientMock) CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) (ep1 *sentry.EventID) {
 	mm_atomic.AddUint64(&mmCaptureEvent.beforeCaptureEventCounter, 1)
 	defer mm_atomic.AddUint64(&mmCaptureEvent.afterCaptureEventCounter, 1)
 
@@ -164,7 +164,7 @@ func (mmCaptureEvent *SentryClientMock) CaptureEvent(event *sentry.Event, hint *
 	for _, e := range mmCaptureEvent.CaptureEventMock.expectations {
 		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.s1
+			return e.results.ep1
 		}
 	}
 
@@ -180,7 +180,7 @@ func (mmCaptureEvent *SentryClientMock) CaptureEvent(event *sentry.Event, hint *
 		if mm_results == nil {
 			mmCaptureEvent.t.Fatal("No results are set for the SentryClientMock.CaptureEvent")
 		}
-		return (*mm_results).s1
+		return (*mm_results).ep1
 	}
 	if mmCaptureEvent.funcCaptureEvent != nil {
 		return mmCaptureEvent.funcCaptureEvent(event, hint, scope)

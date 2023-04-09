@@ -12,8 +12,10 @@ import (
 
 //go:generate minimock -i github.com/galecore/xslog/xsentry.SentryClient -o sentry_client_mock_test.go
 type SentryClient interface {
-	CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope *sentry.Scope) string
+	CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) *sentry.EventID
 }
+
+var DefaultSeparator = "."
 
 var DefaultEnabledLevels = []slog.Level{slog.LevelError, slog.LevelWarn}
 
@@ -27,19 +29,22 @@ var slogLevelToSentryLevel = map[slog.Level]sentry.Level{
 type Handler struct {
 	sentry SentryClient
 
+	attrs []slog.Attr
+	group string
+
 	enabledLevels []slog.Level
-	attrs         []slog.Attr
-	group         string
+	separator     string
 }
 
 func NewDefaultHandler(sentry SentryClient) *Handler {
-	return NewHandler(sentry, DefaultEnabledLevels)
+	return NewHandler(sentry, DefaultEnabledLevels, DefaultSeparator)
 }
 
-func NewHandler(sentry SentryClient, enabledLevels []slog.Level) *Handler {
+func NewHandler(sentry SentryClient, enabledLevels []slog.Level, separator string) *Handler {
 	return &Handler{
 		sentry:        sentry,
 		enabledLevels: enabledLevels,
+		separator:     separator,
 	}
 }
 
@@ -105,9 +110,10 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &Handler{
 		sentry:        h.sentry,
-		enabledLevels: h.enabledLevels,
 		attrs:         util.Merge(h.attrs, attrs),
 		group:         h.group,
+		enabledLevels: h.enabledLevels,
+		separator:     h.separator,
 	}
 }
 
@@ -116,6 +122,7 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 		sentry:        h.sentry,
 		enabledLevels: h.enabledLevels,
 		attrs:         h.attrs,
-		group:         h.group + name + ".",
+		group:         h.group + name + h.separator,
+		separator:     h.separator,
 	}
 }

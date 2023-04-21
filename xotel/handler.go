@@ -78,11 +78,12 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 
 func (h *Handler) convertAttrs(record slog.Record) []attribute.KeyValue {
 	attrs := make([]attribute.KeyValue, 0, record.NumAttrs()+len(h.attrs))
-	record.Attrs(func(attr slog.Attr) {
+	record.Attrs(func(attr slog.Attr) bool {
 		attrs = append(attrs, attribute.KeyValue{
 			Key:   attribute.Key(h.group + attr.Key),
 			Value: attribute.StringValue(attr.Value.String()),
 		})
+		return true
 	})
 	for _, attr := range h.attrs {
 		attrs = append(attrs, attribute.KeyValue{

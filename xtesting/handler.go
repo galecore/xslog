@@ -54,12 +54,13 @@ func (h *TestingHandler) buildAttrs(record slog.Record) string {
 		builder strings.Builder
 		counter int
 	)
-	record.Attrs(func(attr slog.Attr) {
+	record.Attrs(func(attr slog.Attr) bool {
 		if counter != 0 {
 			builder.WriteString(" ")
 		}
 		counter++
 		builder.WriteString(fmt.Sprintf("%s%s=%s", h.group, attr.Key, attr.Value.String()))
+		return true
 	})
 	for _, attr := range h.attrs {
 		if counter != 0 {

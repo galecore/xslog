@@ -68,8 +68,9 @@ func (h *Handler) Handle(_ context.Context, rec slog.Record) error {
 	}
 
 	var checkedFields []zapcore.Field
-	rec.Attrs(func(attr slog.Attr) {
+	rec.Attrs(func(attr slog.Attr) bool {
 		checkedFields = append(checkedFields, slogAttrToZapField(attr.Key, attr.Value))
+		return true
 	})
 	checked.Write(checkedFields...)
 	return nil

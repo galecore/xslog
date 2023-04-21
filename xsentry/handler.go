@@ -59,8 +59,9 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	event.Message = record.Message
 
 	event.Extra = make(map[string]any, record.NumAttrs()+len(h.attrs))
-	record.Attrs(func(attr slog.Attr) {
+	record.Attrs(func(attr slog.Attr) bool {
 		event.Extra[h.group+attr.Key] = attr.Value.Any()
+		return true
 	})
 	for _, attr := range h.attrs {
 		event.Extra[h.group+attr.Key] = attr.Value.Any()

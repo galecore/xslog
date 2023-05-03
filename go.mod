@@ -5,11 +5,12 @@ go 1.20
 require (
 	github.com/getsentry/sentry-go v0.20.0
 	github.com/gojuno/minimock/v3 v3.1.3
+	github.com/google/go-cmp v0.5.9
 	github.com/stretchr/testify v1.8.2
 	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20230420155640-133eef4313cb
+	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 )
 
 require (

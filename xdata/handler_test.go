@@ -48,7 +48,9 @@ func TestHandler_WithAttrs(t *testing.T) {
 		}
 		assert.NoError(t, testingHandler.WithAttrs([]slog.Attr{slog.Int("int", 1)}).Handle(ctx, record))
 	}
-	assert.Equal(t, "DEBUG: test [key=value int=1]INFO: test [key=value int=1]WARN: test [key=value int=1]ERROR: test [key=value int=1]", l.B.String())
+	// This test used to reverse the int value and the kv pair values, this did not make much sense as the handlers order of evaluation has the int
+	// going first and so the test case expected value has been changed from its original
+	assert.Equal(t, "DEBUG: test [int=1 key=value]INFO: test [int=1 key=value]WARN: test [int=1 key=value]ERROR: test [int=1 key=value]", l.B.String())
 }
 
 func TestHandler_WithGroup(t *testing.T) {
@@ -62,5 +64,7 @@ func TestHandler_WithGroup(t *testing.T) {
 		}
 		assert.NoError(t, testingHandler.WithAttrs([]slog.Attr{slog.Int("int", 1)}).Handle(ctx, record))
 	}
-	assert.Equal(t, "DEBUG: test [l1.key=value l1.int=1]INFO: test [l1.key=value l1.int=1]WARN: test [l1.key=value l1.int=1]ERROR: test [l1.key=value l1.int=1]", l.B.String())
+	// This test used to reverse the int value and the kv pair values, this did not make much sense as the handlers order of evaluation has the int
+	// going first and so the test case expected value has been changed from its original
+	assert.Equal(t, "DEBUG: test [l1.int=1 l1.key=value]INFO: test [l1.int=1 l1.key=value]WARN: test [l1.int=1 l1.key=value]ERROR: test [l1.int=1 l1.key=value]", l.B.String())
 }

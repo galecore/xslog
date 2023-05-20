@@ -24,16 +24,21 @@ func NewDefaultHandler() *Handler {
 func NewHandler(enabledLevels []slog.Level, separator string) *Handler {
 	return &Handler{
 		enabledLevels: enabledLevels,
-		attrs:         map[string]string{},
+		attrs:         []attr{},
 		separator:     separator,
 	}
+}
+
+type attr struct {
+	key   string
+	value slog.Value
 }
 
 type Handler struct {
 	enabledLevels []slog.Level
 
 	with  *withsupport.GroupOrAttrs
-	attrs map[string]string
+	attrs []attr
 
 	separator string
 }
@@ -48,7 +53,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		return nil
 	}
 
-	h.attrs = map[string]string{}
+	h.attrs = []attr{}
 	groups := h.with.Apply(h.formatAttr)
 	record.Attrs(func(a slog.Attr) bool {
 		return h.formatAttr(groups, a)
@@ -72,11 +77,11 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 	handler := &Handler{
 		enabledLevels: append([]slog.Level{}, h.enabledLevels...),
 		with:          h.with.WithGroup(name),
-		attrs:         make(map[string]string, len(h.attrs)),
+		attrs:         make([]attr, len(h.attrs)),
 		separator:     h.separator,
 	}
-	for k, v := range h.attrs {
-		handler.attrs[k] = v
+	for i, anAttr := range h.attrs {
+		handler.attrs[i] = attr{key: anAttr.key, value: anAttr.value}
 	}
 	return handler
 }
@@ -85,11 +90,11 @@ func (h *Handler) WithAttrs(as []slog.Attr) slog.Handler {
 	handler := &Handler{
 		enabledLevels: append([]slog.Level{}, h.enabledLevels...),
 		with:          h.with.WithAttrs(as),
-		attrs:         make(map[string]string, len(h.attrs)),
+		attrs:         make([]attr, len(h.attrs)),
 		separator:     h.separator,
 	}
-	for k, v := range h.attrs {
-		handler.attrs[k] = v
+	for i, anAttr := range h.attrs {
+		handler.attrs[i] = attr{key: anAttr.key, value: anAttr.value}
 	}
 	return handler
 }
@@ -112,15 +117,15 @@ func (h *Handler) formatAttr(groups []string, a slog.Attr) bool {
 		if len(groups) > 0 {
 			key = strings.Join(groups, ".") + "." + key
 		}
-		h.attrs[key] = a.Value.String()
+		h.attrs = append(h.attrs, attr{key: key, value: a.Value})
 	}
 	return true
 }
 
 func (h *Handler) convertAttrs() (attrs []attribute.KeyValue) {
 	attrs = make([]attribute.KeyValue, 0, len(h.attrs))
-	for k, v := range h.attrs {
-		attrs = append(attrs, attribute.String(k, v))
+	for _, anAttr := range h.attrs {
+		attrs = append(attrs, attribute.String(anAttr.key, anAttr.value.String()))
 	}
 	return attrs
 }

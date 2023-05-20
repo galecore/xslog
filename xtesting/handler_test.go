@@ -70,3 +70,22 @@ func TestHandler_WithGroup(t *testing.T) {
 	}
 	assert.Equal(t, "DEBUG: test [group.key=value group.int=1]INFO: test [group.key=value group.int=1]WARN: test [group.key=value group.int=1]ERROR: test [group.key=value group.int=1]", logger.B.String())
 }
+
+func TestHandler_WithGroupAggregate(t *testing.T) {
+	logger := util.NewBufferedLogger()
+	testingHandler := NewTestingHandler(logger)
+	slogHandler := testingHandler.
+		WithAttrs([]slog.Attr{slog.Int("a", 1)}).
+		WithGroup("G").
+		WithAttrs([]slog.Attr{slog.Int("b", 2)}).
+		WithGroup("H")
+	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
+		record := slog.Record{
+			Level:   level,
+			Message: "test",
+		}
+		record.AddAttrs(slog.String("key", "value"), slog.Int("int", 1))
+		assert.NoError(t, slogHandler.Handle(nil, record))
+	}
+	assert.Equal(t, "DEBUG: test [a=1 G.b=2 G.H.key=value G.H.int=1]INFO: test [a=1 G.b=2 G.H.key=value G.H.int=1]WARN: test [a=1 G.b=2 G.H.key=value G.H.int=1]ERROR: test [a=1 G.b=2 G.H.key=value G.H.int=1]", logger.B.String())
+}

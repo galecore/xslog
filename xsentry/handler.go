@@ -32,7 +32,7 @@ type Handler struct {
 	sentry SentryClient
 
 	with  *withsupport.GroupOrAttrs
-	attrs map[string]string
+	attrs map[string]slog.Value
 
 	enabledLevels []slog.Level
 	separator     string
@@ -46,7 +46,7 @@ func NewHandler(sentry SentryClient, enabledLevels []slog.Level, separator strin
 	return &Handler{
 		sentry:        sentry,
 		enabledLevels: enabledLevels,
-		attrs:         map[string]string{},
+		attrs:         map[string]slog.Value{},
 		separator:     separator,
 	}
 }
@@ -61,7 +61,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	event.Level = slogLevelToSentryLevel[record.Level]
 	event.Message = record.Message
 
-	h.attrs = map[string]string{}
+	h.attrs = map[string]slog.Value{}
 	groups := h.with.Apply(h.formatAttr)
 	record.Attrs(func(a slog.Attr) bool {
 		return h.formatAttr(groups, a)
@@ -69,7 +69,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 
 	event.Extra = map[string]interface{}{}
 	for k, v := range h.attrs {
-		event.Extra[k] = v
+		event.Extra[k] = v.Any()
 	}
 
 	var (
@@ -132,7 +132,7 @@ func (h *Handler) formatAttr(groups []string, a slog.Attr) bool {
 		if len(groups) > 0 {
 			key = strings.Join(groups, ".") + "." + key
 		}
-		h.attrs[key] = a.Value.String()
+		h.attrs[key] = a.Value
 	}
 	return true
 }
@@ -141,7 +141,7 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	handler := &Handler{
 		sentry:        h.sentry,
 		with:          h.with.WithAttrs(attrs),
-		attrs:         make(map[string]string, len(h.attrs)),
+		attrs:         make(map[string]slog.Value, len(h.attrs)),
 		enabledLevels: h.enabledLevels,
 		separator:     h.separator,
 	}
@@ -156,7 +156,7 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 		sentry:        h.sentry,
 		enabledLevels: h.enabledLevels,
 		with:          h.with.WithGroup(name),
-		attrs:         make(map[string]string, len(h.attrs)),
+		attrs:         make(map[string]slog.Value, len(h.attrs)),
 		separator:     h.separator,
 	}
 	for k, v := range h.attrs {

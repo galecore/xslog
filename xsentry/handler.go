@@ -9,10 +9,10 @@ import (
 	"golang.org/x/exp/slices"
 	"golang.org/x/exp/slog"
 
-	"github.com/galecore/xslog/withsupport"
+	"github.com/karlmutch/xslog/withsupport"
 )
 
-//go:generate minimock -i github.com/galecore/xslog/xsentry.SentryClient -o sentry_client_mock_test.go
+//go:generate minimock -i github.com/karlmutch/xslog/xsentry.SentryClient -o sentry_client_mock_test.go
 type SentryClient interface {
 	CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) *sentry.EventID
 }

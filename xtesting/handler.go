@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/exp/slog"
 
-	"github.com/galecore/xslog/withsupport"
+	"github.com/karlmutch/xslog/withsupport"
 )
 
 type Logger interface {

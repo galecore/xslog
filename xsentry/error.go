@@ -3,7 +3,7 @@ package xsentry
 import (
 	"fmt"
 
-	"github.com/galecore/xslog/xsentry/internal/stacktrace"
+	"github.com/karlmutch/xslog/xsentry/internal/stacktrace"
 	"golang.org/x/exp/slog"
 )
 

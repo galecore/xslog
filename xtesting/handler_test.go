@@ -3,7 +3,7 @@ package xtesting
 import (
 	"testing"
 
-	"github.com/galecore/xslog/util"
+	"github.com/karlmutch/xslog/util"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slog"
 )

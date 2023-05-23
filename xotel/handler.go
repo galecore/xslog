@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/galecore/xslog/withsupport"
+	"github.com/karlmutch/xslog/withsupport"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"

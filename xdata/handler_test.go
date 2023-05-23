@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/galecore/xslog/util"
-	"github.com/galecore/xslog/xtesting"
+	"github.com/karlmutch/xslog/util"
+	"github.com/karlmutch/xslog/xtesting"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slog"
 )

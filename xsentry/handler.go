@@ -3,14 +3,16 @@ package xsentry
 import (
 	"context"
 	"reflect"
+	"strings"
 
-	"github.com/galecore/xslog/util"
 	"github.com/getsentry/sentry-go"
 	"golang.org/x/exp/slices"
 	"golang.org/x/exp/slog"
+
+	"github.com/karlmutch/xslog/withsupport"
 )
 
-//go:generate minimock -i github.com/galecore/xslog/xsentry.SentryClient -o sentry_client_mock_test.go
+//go:generate minimock -i github.com/karlmutch/xslog/xsentry.SentryClient -o sentry_client_mock_test.go
 type SentryClient interface {
 	CaptureEvent(event *sentry.Event, hint *sentry.EventHint, scope sentry.EventModifier) *sentry.EventID
 }
@@ -29,8 +31,8 @@ var slogLevelToSentryLevel = map[slog.Level]sentry.Level{
 type Handler struct {
 	sentry SentryClient
 
-	attrs []slog.Attr
-	group string
+	with  *withsupport.GroupOrAttrs
+	attrs map[string]slog.Value
 
 	enabledLevels []slog.Level
 	separator     string
@@ -44,6 +46,7 @@ func NewHandler(sentry SentryClient, enabledLevels []slog.Level, separator strin
 	return &Handler{
 		sentry:        sentry,
 		enabledLevels: enabledLevels,
+		attrs:         map[string]slog.Value{},
 		separator:     separator,
 	}
 }
@@ -58,18 +61,22 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	event.Level = slogLevelToSentryLevel[record.Level]
 	event.Message = record.Message
 
-	event.Extra = make(map[string]any, record.NumAttrs()+len(h.attrs))
-	record.Attrs(func(attr slog.Attr) {
-		event.Extra[h.group+attr.Key] = attr.Value.Any()
+	h.attrs = map[string]slog.Value{}
+	groups := h.with.Apply(h.formatAttr)
+	record.Attrs(func(a slog.Attr) bool {
+		return h.formatAttr(groups, a)
 	})
-	for _, attr := range h.attrs {
-		event.Extra[h.group+attr.Key] = attr.Value.Any()
+
+	event.Extra = map[string]interface{}{}
+	for k, v := range h.attrs {
+		event.Extra[k] = v.Any()
 	}
 
 	var (
 		err              error
 		sentryStacktrace *sentry.Stacktrace
 	)
+
 	for eventKey, eventExtra := range event.Extra {
 		if eventKey == "error" {
 			switch extra := eventExtra.(type) {
@@ -107,22 +114,53 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 	return nil
 }
 
+func (h *Handler) formatAttr(groups []string, a slog.Attr) bool {
+	if a.Value.Kind() == slog.KindGroup {
+		gs := a.Value.Group()
+		if len(gs) == 0 {
+			return true
+		}
+		if a.Key != "" {
+			groups = append(groups, a.Key)
+		}
+		for _, g := range gs {
+			if !h.formatAttr(groups, g) {
+				return false
+			}
+		}
+	} else if key := a.Key; key != "" {
+		if len(groups) > 0 {
+			key = strings.Join(groups, ".") + "." + key
+		}
+		h.attrs[key] = a.Value
+	}
+	return true
+}
+
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &Handler{
+	handler := &Handler{
 		sentry:        h.sentry,
-		attrs:         util.Merge(h.attrs, attrs),
-		group:         h.group,
+		with:          h.with.WithAttrs(attrs),
+		attrs:         make(map[string]slog.Value, len(h.attrs)),
 		enabledLevels: h.enabledLevels,
 		separator:     h.separator,
 	}
+	for k, v := range h.attrs {
+		handler.attrs[k] = v
+	}
+	return handler
 }
 
 func (h *Handler) WithGroup(name string) slog.Handler {
-	return &Handler{
+	handler := &Handler{
 		sentry:        h.sentry,
 		enabledLevels: h.enabledLevels,
-		attrs:         h.attrs,
-		group:         h.group + name + h.separator,
+		with:          h.with.WithGroup(name),
+		attrs:         make(map[string]slog.Value, len(h.attrs)),
 		separator:     h.separator,
 	}
+	for k, v := range h.attrs {
+		handler.attrs[k] = v
+	}
+	return handler
 }

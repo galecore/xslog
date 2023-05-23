@@ -3,7 +3,7 @@ package xdata
 import (
 	"context"
 
-	"github.com/galecore/xslog/util"
+	"github.com/karlmutch/xslog/util"
 	"golang.org/x/exp/slog"
 )
 

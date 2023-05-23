@@ -19,8 +19,14 @@ func (h *Handler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
-	record.AddAttrs(ContextAttrs(ctx)...)
-	return h.h.Handle(ctx, record)
+	// Copies the record to prepend the attributes from the ctx first which the original test cases preferred
+	newRecord := slog.NewRecord(record.Time, record.Level, record.Message, record.PC)
+	newRecord.AddAttrs(ContextAttrs(ctx)...)
+	record.Attrs(func(a slog.Attr) bool {
+		newRecord.AddAttrs(a)
+		return true
+	})
+	return h.h.Handle(ctx, newRecord)
 }
 
 func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {

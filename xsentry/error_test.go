@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/galecore/xslog/xsentry/internal/stacktrace"
+	"github.com/karlmutch/xslog/xsentry/internal/stacktrace"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slog"
 )

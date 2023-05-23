@@ -1,15 +1,16 @@
-module github.com/galecore/xslog
+module github.com/karlmutch/xslog
 
 go 1.20
 
 require (
-	github.com/getsentry/sentry-go v0.20.0
+	github.com/getsentry/sentry-go v0.21.0
 	github.com/gojuno/minimock/v3 v3.1.3
-	github.com/stretchr/testify v1.8.2
-	go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/trace v1.14.0
+	github.com/google/go-cmp v0.5.9
+	github.com/stretchr/testify v1.8.3
+	go.opentelemetry.io/otel v1.15.1
+	go.opentelemetry.io/otel/trace v1.15.1
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 )
 
 require (

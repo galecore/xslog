@@ -1,4 +1,4 @@
-module github.com/galecore/xslog
+module github.com/karlmutch/xslog
 
 go 1.20
 
@@ -10,7 +10,7 @@ require (
 	go.opentelemetry.io/otel v1.15.1
 	go.opentelemetry.io/otel/trace v1.15.1
 	go.uber.org/zap v1.24.0
-	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 )
 
 require (

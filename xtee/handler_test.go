@@ -12,8 +12,8 @@ import (
 func TestHandler_Enabled(t *testing.T) {
 	l1, l2 := util.NewBufferedLogger(), util.NewBufferedLogger()
 	testingHandler := NewHandler(
-		xtesting.NewTestingHandler(l1).WithGroup("l1"),
-		xtesting.NewTestingHandler(l2).WithGroup("l2"),
+		xtesting.NewHandler(l1).WithGroup("l1"),
+		xtesting.NewHandler(l2).WithGroup("l2"),
 	)
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 		assert.True(t, testingHandler.Enabled(nil, level))
@@ -25,8 +25,8 @@ func TestHandler_Handle(t *testing.T) {
 		l1, l2 := util.NewBufferedLogger(), util.NewBufferedLogger()
 
 		testingHandler := NewHandler(
-			xtesting.NewTestingHandler(l1).WithGroup("l1"),
-			xtesting.NewTestingHandler(l2).WithGroup("l2"),
+			xtesting.NewHandler(l1).WithGroup("l1"),
+			xtesting.NewHandler(l2).WithGroup("l2"),
 		)
 		for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 			assert.NoError(t, testingHandler.Handle(nil, slog.Record{
@@ -41,8 +41,8 @@ func TestHandler_Handle(t *testing.T) {
 	t.Run("with attrs", func(t *testing.T) {
 		l1, l2 := util.NewBufferedLogger(), util.NewBufferedLogger()
 		testingHandler := NewHandler(
-			xtesting.NewTestingHandler(l1).WithGroup("l1"),
-			xtesting.NewTestingHandler(l2).WithGroup("l2"),
+			xtesting.NewHandler(l1).WithGroup("l1"),
+			xtesting.NewHandler(l2).WithGroup("l2"),
 		)
 		for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 			record := slog.Record{
@@ -61,8 +61,8 @@ func TestHandler_Handle(t *testing.T) {
 func TestHandler_WithAttrs(t *testing.T) {
 	l1, l2 := util.NewBufferedLogger(), util.NewBufferedLogger()
 	testingHandler := NewHandler(
-		xtesting.NewTestingHandler(l1).WithGroup("l1"),
-		xtesting.NewTestingHandler(l2).WithGroup("l2"),
+		xtesting.NewHandler(l1).WithGroup("l1"),
+		xtesting.NewHandler(l2).WithGroup("l2"),
 	)
 	slogHandler := testingHandler.WithAttrs([]slog.Attr{slog.String("key", "value"), slog.Int("int", 1)})
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
@@ -79,8 +79,8 @@ func TestHandler_WithAttrs(t *testing.T) {
 func TestHandler_WithGroup(t *testing.T) {
 	l1, l2 := util.NewBufferedLogger(), util.NewBufferedLogger()
 	testingHandler := NewHandler(
-		xtesting.NewTestingHandler(l1).WithGroup("l1"),
-		xtesting.NewTestingHandler(l2).WithGroup("l2"),
+		xtesting.NewHandler(l1).WithGroup("l1"),
+		xtesting.NewHandler(l2).WithGroup("l2"),
 	)
 	slogHandler := testingHandler.WithGroup("group").WithAttrs([]slog.Attr{slog.String("key", "value"), slog.Int("int", 1)})
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {

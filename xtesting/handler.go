@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/galecore/xslog/util"
+	"github.com/jba/slog/withsupport"
 	"golang.org/x/exp/slog"
 )
 
@@ -14,59 +14,76 @@ type Logger interface {
 	Logf(format string, args ...any)
 }
 
-type TestingHandler struct {
-	t     Logger
-	attrs []slog.Attr
-	group string
+type Handler struct {
+	t   Logger
+	goa *withsupport.GroupOrAttrs
 }
 
-func NewTestingHandler(t Logger) *TestingHandler {
-	return &TestingHandler{t: t}
+func NewHandler(t Logger) *Handler {
+	return &Handler{t: t}
 }
 
-func (h *TestingHandler) Enabled(context.Context, slog.Level) bool {
+func (h *Handler) Enabled(context.Context, slog.Level) bool {
 	return true
 }
 
-func (h *TestingHandler) Handle(_ context.Context, record slog.Record) error {
+func (h *Handler) Handle(_ context.Context, record slog.Record) error {
 	h.t.Logf("%s: %s [%s]", record.Level, record.Message, h.buildAttrs(record))
 	return nil
 }
 
-func (h *TestingHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &TestingHandler{
-		t:     h.t,
-		attrs: util.Merge(h.attrs, attrs),
-		group: h.group,
+func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	if len(attrs) == 0 {
+		return h
+	}
+	if h.goa == nil {
+		h.goa = new(withsupport.GroupOrAttrs)
+	}
+	return &Handler{
+		t:   h.t,
+		goa: h.goa.WithAttrs(attrs),
 	}
 }
 
-func (h *TestingHandler) WithGroup(name string) slog.Handler {
-	return &TestingHandler{
-		t:     h.t,
-		attrs: h.attrs,
-		group: h.group + name + ".",
+func (h *Handler) WithGroup(name string) slog.Handler {
+	if len(name) == 0 {
+		return h
+	}
+	if h.goa == nil {
+		h.goa = new(withsupport.GroupOrAttrs)
+	}
+	return &Handler{
+		t:   h.t,
+		goa: h.goa.WithGroup(name),
 	}
 }
-
-func (h *TestingHandler) buildAttrs(record slog.Record) string {
+func (h *Handler) buildAttrs(record slog.Record) string {
 	var (
 		builder strings.Builder
 		counter int
 	)
-	record.Attrs(func(attr slog.Attr) {
+	groups := h.goa.Apply(func(groups []string, a slog.Attr) {
 		if counter != 0 {
 			builder.WriteString(" ")
 		}
+		if len(groups) == 0 {
+			builder.WriteString(fmt.Sprintf("%s=%s", a.Key, a.Value.String()))
+		} else {
+			builder.WriteString(fmt.Sprintf("%s.%s=%s", strings.Join(groups, "."), a.Key, a.Value.String()))
+		}
 		counter++
-		builder.WriteString(fmt.Sprintf("%s%s=%s", h.group, attr.Key, attr.Value.String()))
 	})
-	for _, attr := range h.attrs {
+	record.Attrs(func(a slog.Attr) bool {
 		if counter != 0 {
 			builder.WriteString(" ")
 		}
+		if len(groups) == 0 {
+			builder.WriteString(fmt.Sprintf("%s=%s", a.Key, a.Value.String()))
+		} else {
+			builder.WriteString(fmt.Sprintf("%s.%s=%s", strings.Join(groups, "."), a.Key, a.Value.String()))
+		}
 		counter++
-		builder.WriteString(fmt.Sprintf("%s%s=%s", h.group, attr.Key, attr.Value.String()))
-	}
+		return true
+	})
 	return builder.String()
 }

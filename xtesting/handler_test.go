@@ -9,7 +9,7 @@ import (
 )
 
 func TestHandler_Enabled(t *testing.T) {
-	testingHandler := NewTestingHandler(util.NewBufferedLogger())
+	testingHandler := NewHandler(util.NewBufferedLogger())
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 		assert.True(t, testingHandler.Enabled(nil, level))
 	}
@@ -18,7 +18,7 @@ func TestHandler_Enabled(t *testing.T) {
 func TestHandler_Handle(t *testing.T) {
 	t.Run("no attrs", func(t *testing.T) {
 		logger := util.NewBufferedLogger()
-		testingHandler := NewTestingHandler(logger)
+		testingHandler := NewHandler(logger)
 		for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 			assert.NoError(t, testingHandler.Handle(nil, slog.Record{
 				Level:   level,
@@ -30,7 +30,7 @@ func TestHandler_Handle(t *testing.T) {
 
 	t.Run("with attrs", func(t *testing.T) {
 		logger := util.NewBufferedLogger()
-		testingHandler := NewTestingHandler(logger)
+		testingHandler := NewHandler(logger)
 		for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 			record := slog.Record{
 				Level:   level,
@@ -41,11 +41,25 @@ func TestHandler_Handle(t *testing.T) {
 		}
 		assert.Equal(t, "DEBUG: test [key=value int=1]INFO: test [key=value int=1]WARN: test [key=value int=1]ERROR: test [key=value int=1]", logger.B.String())
 	})
+
+	t.Run("with interchanging attrs and group", func(t *testing.T) {
+		logger := util.NewBufferedLogger()
+		testingHandler := NewHandler(logger)
+		for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
+			record := slog.Record{
+				Level:   level,
+				Message: "test",
+			}
+			record.AddAttrs(slog.String("key", "value"), slog.Group("g", slog.Int("int", 1), slog.Group("g2", slog.Int("int", 2))))
+			assert.NoError(t, testingHandler.Handle(nil, record))
+		}
+		assert.Equal(t, "DEBUG: test [key=value g=[int=1 g2=[int=2]]]INFO: test [key=value g=[int=1 g2=[int=2]]]WARN: test [key=value g=[int=1 g2=[int=2]]]ERROR: test [key=value g=[int=1 g2=[int=2]]]", logger.B.String())
+	})
 }
 
 func TestHandler_WithAttrs(t *testing.T) {
 	logger := util.NewBufferedLogger()
-	testingHandler := NewTestingHandler(logger)
+	testingHandler := NewHandler(logger)
 	slogHandler := testingHandler.WithAttrs([]slog.Attr{slog.String("key", "value"), slog.Int("int", 1)})
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 		assert.NoError(t, slogHandler.Handle(nil, slog.Record{
@@ -58,7 +72,7 @@ func TestHandler_WithAttrs(t *testing.T) {
 
 func TestHandler_WithGroup(t *testing.T) {
 	logger := util.NewBufferedLogger()
-	testingHandler := NewTestingHandler(logger)
+	testingHandler := NewHandler(logger)
 	slogHandler := testingHandler.WithGroup("group")
 	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 		record := slog.Record{

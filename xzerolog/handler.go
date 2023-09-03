@@ -2,10 +2,10 @@ package xzerolog
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/jba/slog/withsupport"
 	"github.com/rs/zerolog"
-	"golang.org/x/exp/slog"
 )
 
 type Handler struct {

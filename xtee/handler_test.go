@@ -1,12 +1,12 @@
 package xtee
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/galecore/xslog/util"
 	"github.com/galecore/xslog/xtesting"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slog"
 )
 
 func TestHandler_Enabled(t *testing.T) {

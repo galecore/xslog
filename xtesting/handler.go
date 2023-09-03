@@ -3,10 +3,10 @@ package xtesting
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/jba/slog/withsupport"
-	"golang.org/x/exp/slog"
 )
 
 type Logger interface {

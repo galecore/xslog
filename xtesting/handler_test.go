@@ -1,11 +1,11 @@
 package xtesting
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/galecore/xslog/util"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slog"
 )
 
 func TestHandler_Enabled(t *testing.T) {

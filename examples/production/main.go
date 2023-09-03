@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 
 	"github.com/galecore/xslog/xdata"
@@ -9,7 +10,6 @@ import (
 	"github.com/galecore/xslog/xtee"
 	"github.com/galecore/xslog/xzerolog"
 	"github.com/rs/zerolog"
-	"golang.org/x/exp/slog"
 )
 
 // NewProductionHandlers creates a set of slog handlers that can be used in production

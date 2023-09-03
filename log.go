@@ -2,10 +2,9 @@ package xslog
 
 import (
 	"context"
+	"log/slog"
 	"runtime"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 func Debug(ctx context.Context, msg string, attrs ...slog.Attr) {

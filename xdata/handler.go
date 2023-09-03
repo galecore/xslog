@@ -2,8 +2,7 @@ package xdata
 
 import (
 	"context"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func NewHandler(h slog.Handler) *Handler {

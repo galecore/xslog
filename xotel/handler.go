@@ -2,13 +2,13 @@ package xotel
 
 import (
 	"context"
+	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/jba/slog/withsupport"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/slices"
-	"golang.org/x/exp/slog"
 )
 
 const DefaultSeparator = "."

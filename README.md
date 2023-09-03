@@ -1,13 +1,13 @@
 # xslog
-Extension handlers and example usage for the golang [slog](https://pkg.go.dev/golang.org/x/exp/slog) library
+Extension handlers and example usage for the golang [slog](https://pkg.go.dev/log/slog) library
 
 ## Overview
 
-The [slog](https://pkg.go.dev/golang.org/x/exp/slog) library is a new logging interface for golang.
+The [slog](https://pkg.go.dev/log/slog) library is a new logging interface for golang.
 It is a simple interface that allows you to use any logging library you want, as long as it implements the Handler interface.
 
 The philosophy behind slog is that it should be easy to use with any logging library, as an interface set of log functions.
-The implementation of __how__ to log is left to the [Handler](https://pkg.go.dev/golang.org/x/exp/slog#Handler) interface.
+The implementation of __how__ to log is left to the [Handler](https://pkg.go.dev/log/slog#Handler) interface.
 
 ## Example usage 
 
@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 
 	"github.com/galecore/xslog/xdata"
@@ -23,7 +24,6 @@ import (
 	"github.com/galecore/xslog/xtee"
 	"github.com/galecore/xslog/xzerolog"
 	"github.com/rs/zerolog"
-	"golang.org/x/exp/slog"
 )
 
 // NewProductionHandlers creates a set of slog handlers that can be used in production

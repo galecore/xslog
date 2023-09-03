@@ -2,11 +2,11 @@ package xzerolog
 
 import (
 	"bytes"
+	"log/slog"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slog"
 )
 
 func TestHandler_Enabled(t *testing.T) {

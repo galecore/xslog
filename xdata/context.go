@@ -2,9 +2,9 @@ package xdata
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/galecore/xslog/util"
-	"golang.org/x/exp/slog"
 )
 
 type ctxKey int

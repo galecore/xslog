@@ -2,10 +2,10 @@ package xdata
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slog"
 )
 
 func TestWithAttrs(t *testing.T) {
